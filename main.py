@@ -282,6 +282,22 @@ class World:
             target.attributes[attr] = max(1, min(20, current + delta))
 
         print(f"{initiator.name} -> {target.name}: {interaction.name} ({outcome.description})")
+        # Provide detailed feedback about the outcome
+        details = []
+        if outcome.initiator_mood or outcome.target_mood:
+            details.append(
+                f"mood {initiator.name}:{initiator.mood} {target.name}:{target.mood}"
+            )
+        if outcome.relationship_change:
+            rel = initiator.relationships.get(target.name, 0)
+            details.append(f"relationship now {rel}")
+        if outcome.attr_changes:
+            attr_str = ", ".join(
+                f"{k}:{target.attributes.get(k)}" for k in outcome.attr_changes
+            )
+            details.append(f"attributes -> {attr_str}")
+        if details:
+            print("  " + "; ".join(details))
         initiator.done = True
         target.done = True
         return True
@@ -309,6 +325,17 @@ class World:
     def run(self, cycles: int = 10):
         for _ in range(cycles):
             self.run_cycle()
+        self.summary()
+
+    def summary(self):
+        """Print a summary of all characters and their attributes."""
+        print("\nSimulation complete. Final character states:")
+        for c in self.characters:
+            attrs = ", ".join(f"{k}:{v}" for k, v in sorted(c.attributes.items()))
+            print(
+                f"{c.name} ({c.profession}) mood:{c.mood} energy:{c.energy} "
+                f"charge:{c.charge} credits:{c.credits} | {attrs}"
+            )
 
 
 if __name__ == "__main__":
