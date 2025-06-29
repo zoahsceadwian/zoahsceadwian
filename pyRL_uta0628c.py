@@ -17,6 +17,8 @@ if os.name == 'posix':
 # --- Color Constants ---
 COLOR_RED = '\033[91m'
 COLOR_GREEN = '\033[92m'
+COLOR_YELLOW = '\033[93m'
+COLOR_CYAN = '\033[96m'
 COLOR_RESET = '\033[0m'
 
 # --- Configuration Constants (formerly config.py) ---
@@ -140,12 +142,17 @@ def load_csv_data(filename, key_column=None):
         return {} if key_column else []
 
 def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        sys.stdout.write('\033[2J\033[H')
+        sys.stdout.flush()
 
 def display_options(options, title="Choose an option:"):
-    print(title)
-    for i, option_name in enumerate(options):
-        print(f"{i + 1}. {option_name}")
+    print(f"{COLOR_CYAN}{title}{COLOR_RESET}")
+    print('-' * len(title))
+    for i, option_name in enumerate(options, 1):
+        print(f"{COLOR_YELLOW}{i}{COLOR_RESET}. {option_name}")
     while True:
         try:
             # Use standard input, not get_keypress for this menu
@@ -698,7 +705,8 @@ def select_opponent():
     return npc
 
 def display_hud(player, opponent):
-    clear_screen()
+    sys.stdout.write('\033[H')
+    sys.stdout.flush()
     
     p_bar_fill = int(player.attack_bar_progress / 100 * 20)
     p_bar = f"[{'■' * p_bar_fill}{' ' * (20 - p_bar_fill)}] {player.attack_bar_progress:.0f}%"
