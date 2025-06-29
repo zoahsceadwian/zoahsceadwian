@@ -173,7 +173,7 @@ class Character:
     battery: int = 100
     mood: int = 100
     attributes: Dict[str, int] = field(default_factory=dict)
-    credits: int = 0
+    credits: int = 10
     inventory: Dict[str, int] = field(default_factory=dict)  # 3 slots allowed
     relationships: Dict[str, int] = field(default_factory=dict)
     needs_resource: Optional[str] = None
@@ -216,17 +216,110 @@ class Character:
         self.mood = min(100, self.mood + 5)
         self.done = True
 
-    def perform_professional_action(self, cycle: int, chain: List[str]):
-        """Work action generating credits and consuming resources."""
+    def perform_professional_action(
+        self, cycle: int, chain: List[str], world: "World"
+    ) -> None:
+        """Perform work based on profession, enabling a simple trade system."""
         self.energy = max(0, self.energy - (21 - self.attributes["metabolism"]))
         self.charge = max(0, self.charge - (25 - self.attributes["stamina"]))
         self.mood = max(0, self.mood - 1)
-        self.credits += 1
+
+        prof = self.profession
+        inv = self.inventory
+
+        if prof == "Miner":
+            inv["substrate"] = inv.get("substrate", 0) + 1
+            print(f"{self.name} mined substrate")
+        elif prof == "Craftsman":
+            if inv.get("substrate"):
+                inv["substrate"] -= 1
+                inv["tool"] = inv.get("tool", 0) + 1
+                print(f"{self.name} crafted a tool")
+            else:
+                self.needs_resource = "substrate"
+        elif prof == "Constructor":
+            if inv.get("tool"):
+                inv["tool"] -= 1
+                inv["buildingbits"] = inv.get("buildingbits", 0) + 1
+                print(f"{self.name} built buildingbits")
+            elif inv.get("plankbits"):
+                inv["plankbits"] -= 1
+                inv["buildingbits"] = inv.get("buildingbits", 0) + 1
+                print(f"{self.name} built buildingbits")
+            else:
+                self.needs_resource = "tool"
+        elif prof == "Digital Landscaper":
+            if inv.get("buildingbits"):
+                inv["buildingbits"] -= 1
+                print(f"{self.name} landscaped a new home")
+            else:
+                self.needs_resource = "buildingbits"
+        elif prof == "Farmer":
+            inv["mealbits"] = inv.get("mealbits", 0) + 1
+            print(f"{self.name} harvested mealbits")
+        elif prof == "Cook":
+            if inv.get("mealbits"):
+                inv["mealbits"] -= 1
+                inv["bead"] = inv.get("bead", 0) + 1
+                print(f"{self.name} cooked a bead")
+            else:
+                self.needs_resource = "mealbits"
+        elif prof == "Gatherer":
+            inv["joules"] = inv.get("joules", 0) + 1
+            print(f"{self.name} gathered joules")
+        elif prof == "Refiner":
+            if inv.get("substrate"):
+                inv["substrate"] -= 1
+                self.credits += 1
+                print(f"{self.name} refined substrate into a credit")
+            elif inv.get("woodbits"):
+                inv["woodbits"] -= 1
+                inv["plankbits"] = inv.get("plankbits", 0) + 1
+                print(f"{self.name} refined plankbits")
+            else:
+                self.needs_resource = "substrate"
+        elif prof == "Lumberjack":
+            inv["woodbits"] = inv.get("woodbits", 0) + 1
+            print(f"{self.name} chopped woodbits")
+        elif prof == "Signalist":
+            inv["signalbits"] = inv.get("signalbits", 0) + 1
+            print(f"{self.name} gathered signalbits")
+        elif prof == "Cartographer":
+            if inv.get("signalbits"):
+                inv["signalbits"] -= 1
+                inv["mapbit"] = inv.get("mapbit", 0) + 1
+                print(f"{self.name} produced a mapbit")
+            else:
+                self.needs_resource = "signalbits"
+        elif prof == "Dreamweaver":
+            if inv.get("signalbits"):
+                inv["signalbits"] -= 1
+                inv["bitnapse"] = inv.get("bitnapse", 0) + 1
+                print(f"{self.name} wove a bitnapse")
+            else:
+                self.needs_resource = "signalbits"
+        elif prof == "Crawler":
+            inv["bugs"] = inv.get("bugs", 0) + 1
+            print(f"{self.name} collected bugs")
+        elif prof == "Codehealer":
+            if inv.get("bugs"):
+                inv["bugs"] -= 1
+                inv["bugpatch"] = inv.get("bugpatch", 0) + 1
+                print(f"{self.name} produced a bugpatch")
+            else:
+                self.needs_resource = "bugs"
+        elif prof == "Merchant":
+            world.process_merchant(self)
+        else:
+            # catch-all for any other profession
+            self.credits += 1
+
         if self.credits >= 10:
             block = f"cycle{cycle}_{self.name}_{self.profession}"
             chain.append(block)
             print(f"Block produced: {block}")
             self.credits -= 10
+
         self.done = True
 
 
@@ -245,6 +338,39 @@ class World:
                 name = f"toon{counter:07d}"
                 self.characters.append(Character(name=name, profession=profession))
                 counter += 1
+
+    def process_merchant(self, merchant: Character) -> None:
+        """Simple buy/sell routine for a merchant."""
+        # Merchant buys any excess primary resources for 1 credit
+        buyables = {"substrate", "joules", "woodbits", "mealbits", "signalbits", "bugs", "tool", "plankbits", "buildingbits"}
+        for char in self.characters:
+            if char is merchant:
+                continue
+            for item in list(char.inventory.keys()):
+                if item in buyables and char.inventory[item] > 0 and merchant.credits > 0:
+                    char.inventory[item] -= 1
+                    char.credits += 1
+                    merchant.credits -= 1
+                    merchant.inventory[item] = merchant.inventory.get(item, 0) + 1
+                    print(
+                        f"***TRADE BUY*** {merchant.name} bought {item} from {char.name} for 1 credit"
+                    )
+                    break
+
+        # Merchant sells needed resources for 1 credit
+        for char in self.characters:
+            if char is merchant:
+                continue
+            need = char.needs_resource
+            if need and merchant.inventory.get(need, 0) > 0 and char.credits > 0:
+                merchant.inventory[need] -= 1
+                char.inventory[need] = char.inventory.get(need, 0) + 1
+                char.credits -= 1
+                merchant.credits += 1
+                char.needs_resource = None
+                print(
+                    f"***TRADE SELL*** {merchant.name} sold {need} to {char.name} for 1 credit"
+                )
 
     def _choose_target(self, initiator: Character) -> Optional[Character]:
         """Select an interaction partner based on relationships."""
@@ -315,7 +441,7 @@ class World:
                 if not self.perform_interaction(char):
                     char.perform_self_action()
             elif action == "professional":
-                char.perform_professional_action(self.cycle, self.chain)
+                char.perform_professional_action(self.cycle, self.chain, self)
             else:
                 char.perform_self_action()
         # reset done flags for next cycle
@@ -339,5 +465,27 @@ class World:
 
 
 if __name__ == "__main__":
+    import sys
+    import datetime
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = open(f"simlog_{timestamp}.txt", "w")
+
+    class Tee:
+        def __init__(self, *files):
+            self.files = files
+
+        def write(self, data):
+            for f in self.files:
+                f.write(data)
+
+        def flush(self):
+            for f in self.files:
+                f.flush()
+
+    original_stdout = sys.stdout
+    sys.stdout = Tee(original_stdout, log_file)
     world = World()
-    world.run(10)
+    world.run(100)
+    sys.stdout = original_stdout
+    log_file.close()
