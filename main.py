@@ -352,9 +352,11 @@ class World:
                     char.credits += 1
                     merchant.credits -= 1
                     merchant.inventory[item] = merchant.inventory.get(item, 0) + 1
+
                     print(
                         f"***TRADE BUY*** {merchant.name} bought {item} from {char.name} for 1 credit"
                     )
+
                     break
 
         # Merchant sells needed resources for 1 credit
@@ -489,3 +491,4 @@ if __name__ == "__main__":
     world.run(100)
     sys.stdout = original_stdout
     log_file.close()
+
