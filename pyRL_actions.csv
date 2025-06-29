@@ -1,0 +1,49 @@
+actionID,Name,DMG,BaseDMG,selfBUFF,selfDEBUFF,DEBUFF,Duration,Timing
+1,Punch,AtkPw,10,,,,,
+2,Curse,MgcPw,10,,,,,
+3,Kick,AtkPw,15,,,,,
+4,Uppercut,AtkPw,15,,,,,
+5,Crush,AtkPw,15,,,,,
+6,Bash,AtkPw,15,,,,,
+7,Pummel,AtkPw,20,,,,,
+8,Snurp,AtkPw,10,,,,,
+9,Slash,AtkPw,15,,,,,
+10,Shield Slam,AtkPw,15,,,,,
+11,Stab,AtkPw,15,,,,,
+12,Bite,AtkPw,10,,,,,
+13,Quick Thrust,AtkPw,10,,,,,
+14,Blade Flurry,AtkPw,20,,,,,
+15,Cleave,AtkPw,15,,,,,
+16,Hack,AtkPw,15,,,,,
+17,Overhead Crush,AtkPw,20,,,,,
+18,Skull Splitter,AtkPw,20,,,,,
+19,Judgement,AtkPw,20,,,,,
+20,Bonecrush,AtkPw,20,,,,,
+21,Arcane Shot,MgcPw,15,,,,,
+22,Mana Burn,MgcPw,20,,,,,
+23,Fire Blast,MgcPw,20,,,,,
+24,Ice Needle,MgcPw,10,,,,,
+25,Mind Flay,MgcPw,15,,,,,
+26,Spark,MgcPw,10,,,,,
+27,Smite,MgcPw,17,,,,,
+28,Spleefs,MgcPw,10,,,,,
+29,Dark Pulse,MgcPw,15,,,,,
+30,Apparition,MgcPw,15,,,,,
+31,Soothe,,5,MgcRs,,,10,end
+32,Distract,,5,,,Block,15,start
+33,Feint,,5,AtkSp,,,10,start
+34,Heal,,50,HP,,,5,end
+35,Enrage,,5,AtkSp,,Dodge,15,start
+36,Sunder Armor,,5,Armor,AtkSp,,15,start
+37,Arcane Shield,,10,MgcRs,AtkSp,,10,start
+38,Blade Dancer,,10,Dodge,,,15,start
+39,Berseker,,10,AtkPw,,,10,start
+40,Eye of the Tiger,,5,AtkPw,,AtkSp,20,start
+41,Bleed,,30,,,HP,20,start
+42,Freeze,,20,,,AtkSp,10,start
+43,Deathclaw,AtkPw,30,,,,,
+44,Stink,MgcPw,10,,,,,
+45,Destruction,AtkPw,30,,,,,
+46,TESTsp,,100,AtkSp,,,20,start
+47,TESTpw,,100,AtkPw,,,20,start
+48,TESTarm,,100,Armor,,,20,start
